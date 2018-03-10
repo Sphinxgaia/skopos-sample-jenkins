@@ -31,7 +31,9 @@ git clone https://github.com/my-user/my-repo # change to actual repo
 cd my-repo # change to actual dir
 
 # Build Jenkins image
-docker build -f jenkins-skopos.Dockerfile -t opsani/jenkins-skopos .
+docker build -f jenkins-skopos.Dockerfile -t <your_dockerhub_username>/jenkins-skopos .
+
+docker push <your_dockerhub_username>/jenkins-skopos
 ```
 
 
@@ -39,14 +41,14 @@ docker build -f jenkins-skopos.Dockerfile -t opsani/jenkins-skopos .
 Run the following command on a docker swarm manager node.
 
 ```
-docker run                                         \
-    -d                                             \
+docker service create                              \
     --name jenkins                                 \
-    --restart=unless-stopped                       \
     -p 8888:8080                                   \
-    -v /var/run/docker.sock:/var/run/docker.sock   \
+    --constraint "node.role == manager"
+    --mount type=volume,source=/var/run/docker.sock,destination=/var/run/docker.sock   \
+    --placement-pref 'spread=node.labels.datacenter' \
     --group-add=$(stat -c %g /var/run/docker.sock) \
-    opsani/jenkins-skopos
+    <your_dockerhub_username>/jenkins-skopos
 ```
 
 ## Setup Jenkins
@@ -96,5 +98,3 @@ After you make sure your Jenkins job can be run manually, you can make a change 
  * Open the Jenkins UI and Skopos UI and verify that Skopos runs a deploy (you will see the version change to whatever you set in the step above), and that the Jenkins job succeeds. After the deploy is done and the Jenkins job completes, you should be able to open the sample-service web UI (on port 8889 in our example) and see that it runs the version that you set in the previous step.
 
 ![jenkins-job-run](img/jenkins-job-run.png)
-
-
